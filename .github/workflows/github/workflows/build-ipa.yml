@@ -1,0 +1,50 @@
+{
+  "name": "Build Unsigned IPA",
+  "on": {
+    "push": {
+      "branches": [
+        "main",
+        "master"
+      ]
+    },
+    "workflow_dispatch": {}
+  },
+  "jobs": {
+    "build-ipa": {
+      "runs-on": "macos-15",
+      "steps": [
+        {
+          "uses": "actions/checkout@v4"
+        },
+        {
+          "name": "Unzip v2 project",
+          "run": "unzip -o SaxzyModVIP_IPA_Builder-v2.zip"
+        },
+        {
+          "name": "Install XcodeGen",
+          "run": "brew install xcodegen"
+        },
+        {
+          "name": "Generate Xcode project",
+          "run": "xcodegen generate"
+        },
+        {
+          "name": "Build unsigned .app",
+          "run": "xcodebuild -project SaxzyModVIP.xcodeproj -scheme SaxzyModVIP -configuration Release -sdk iphoneos -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=\"\" build"
+        },
+        {
+          "name": "Package IPA",
+          "run": "mkdir -p build/Payload && cp -R build/DerivedData/Build/Products/Release-iphoneos/SaxzyModVIP.app build/Payload/ && cd build && zip -r -y SaxzyModVIP-v2-unsigned.ipa Payload"
+        },
+        {
+          "name": "Upload IPA",
+          "uses": "actions/upload-artifact@v4",
+          "with": {
+            "name": "SaxzyModVIP-v2-unsigned-ipa",
+            "path": "build/SaxzyModVIP-v2-unsigned.ipa"
+          }
+        }
+      ]
+    }
+  }
+}
